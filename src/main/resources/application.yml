@@ -1,0 +1,10 @@
+excel:
+  sheet:
+    name: "Sheet1"
+  file:
+    name: "C:\\workspace\\excel2word\\src\\main\\resources\\list.xlsx"
+word:
+  templates:
+    - "C:\\workspace\\excel2word\\src\\main\\resources\\employee.docx"
+    - "C:\\workspace\\excel2word\\src\\main\\resources\\young.docx"
+  prefix: ""

@@ -1,9 +1,11 @@
 package com.mikerusoft.excel2word;
 
+import com.mikerusoft.excel2word.props.excel.ExcelProperties;
+import com.mikerusoft.excel2word.utils.ImmutablePair;
+import com.mikerusoft.excel2word.utils.Streams;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
 import org.apache.poi.ss.usermodel.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -19,9 +21,9 @@ public class ExcelDataReader implements DataReader {
     private String fileName;
     private String sheetName;
 
-    public ExcelDataReader(@Value("${excel.file.name}")String fileName, @Value("${excel.sheet.name}") String sheetName) {
-        this.fileName = fileName;
-        this.sheetName = sheetName;
+    public ExcelDataReader(ExcelProperties properties) {
+        this.fileName = properties.getFileOptional().map(ExcelProperties.File::getName).orElse(null);
+        this.sheetName = properties.getSheetOptional().map(ExcelProperties.Sheet::getName).orElse(null);
     }
 
     @Override
@@ -59,9 +61,7 @@ public class ExcelDataReader implements DataReader {
 
     private static ImmutablePair<String, String> getSimpleValuePairWithTitle(Cell cell,String title, FormulaEvaluator evaluator) {
         CellType cellType = cell.getCellType();
-        if (HSSFDateUtil.isCellDateFormatted(cell)) {
-            return ImmutablePair.of(title, parseDate(cell));
-        }
+
         ImmutablePair<String, String> pair = null;
         switch (cellType) {
             case _NONE:
@@ -73,7 +73,7 @@ public class ExcelDataReader implements DataReader {
                 pair = ImmutablePair.of(title, cell.getStringCellValue());
                 break;
             case NUMERIC:
-                pair = ImmutablePair.of(title, parseNumeric(cell.getNumericCellValue()));
+                pair = HSSFDateUtil.isCellDateFormatted(cell) ? ImmutablePair.of(title, parseDate(cell)) : ImmutablePair.of(title, parseNumeric(cell.getNumericCellValue()));
                 break;
             case BOOLEAN:
                 pair = ImmutablePair.of(title, String.valueOf(cell.getBooleanCellValue()));
@@ -114,7 +114,7 @@ public class ExcelDataReader implements DataReader {
         return DATE_FORMAT.format(dateCellValue);
     }
 
-    private static String parseNumeric(double value) { ;
+    private static String parseNumeric(double value) { 
         return String.valueOf(value / Math.round(value) == 1 ? new Double(value).longValue() : value);
     }
 
